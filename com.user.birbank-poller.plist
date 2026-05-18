@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  Template. Do NOT load this file directly. Run install.sh which substitutes
+  __PROJECT_DIR__ with the real install path before placing it into
+  ~/Library/LaunchAgents/.
+-->
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.user.birbank-poller</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>__PROJECT_DIR__/run.sh</string>
+    </array>
+    <key>StartInterval</key>
+    <integer>300</integer>
+    <key>RunAtLoad</key>
+    <true/>
+    <key>StandardOutPath</key>
+    <string>__PROJECT_DIR__/poller.log</string>
+    <key>StandardErrorPath</key>
+    <string>__PROJECT_DIR__/poller.err</string>
+    <key>WorkingDirectory</key>
+    <string>__PROJECT_DIR__</string>
+</dict>
+</plist>
