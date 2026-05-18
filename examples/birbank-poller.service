@@ -1,0 +1,38 @@
+# systemd service for birbank-balance-poller (Linux).
+#
+# Install:
+#   sudo cp birbank-poller.service /etc/systemd/system/
+#   sudo cp birbank-poller.timer   /etc/systemd/system/
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable --now birbank-poller.timer
+#
+# Replace the User= and paths below with your own. The service expects
+# birbank_poller.py, run.sh, and .env to live in /opt/birbank-poller/.
+
+[Unit]
+Description=Birbank Business balance poller
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=birbank
+Group=birbank
+WorkingDirectory=/opt/birbank-poller
+ExecStart=/opt/birbank-poller/run.sh
+# Hardening
+NoNewPrivileges=yes
+PrivateTmp=yes
+PrivateDevices=yes
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths=/opt/birbank-poller
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+RestrictNamespaces=yes
+RestrictRealtime=yes
+LockPersonality=yes
+MemoryDenyWriteExecute=yes
+SystemCallArchitectures=native
+SystemCallFilter=@system-service

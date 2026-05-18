@@ -1,0 +1,9 @@
+# Crontab line for hosts without systemd. Edit with: crontab -e
+#
+# Runs every 5 minutes. Adjust the path to where you installed run.sh.
+# run.sh sets cwd to its own directory, so state.json / token.json
+# resolve correctly regardless of cron's PATH.
+#
+# Log to a file you can rotate; cron emails stderr otherwise.
+
+*/5 * * * * /opt/birbank-poller/run.sh >> /var/log/birbank-poller.log 2>&1

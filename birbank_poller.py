@@ -401,11 +401,10 @@ def _run_loop(interval_s: int) -> int:
             _run_once()
         except Exception:
             LOG.exception("iteration crashed")
-        # interruptible sleep
-        slept = 0
-        while slept < interval_s and not _STOP:
-            time.sleep(min(1, interval_s - slept))
-            slept += 1
+        # interruptible sleep in 1-second ticks so SIGTERM is responsive
+        deadline = time.monotonic() + interval_s
+        while not _STOP and time.monotonic() < deadline:
+            time.sleep(1)
     return 0
 
 

@@ -8,8 +8,8 @@ Unofficial. Not affiliated with Kapital Bank.
 
 ## Requirements
 
-- macOS (uses `launchd`). Linux works too — wire your own `cron` / systemd
-  timer pointing at `run.sh`.
+- macOS (uses `launchd`), or Linux (`systemd` / `cron`). See
+  [`examples/`](examples/) for unit files and a crontab line.
 - Python 3.9+ (stdlib only — no third-party packages).
 - A Birbank Business account with the API portal contract signed via ASAN
   İmza, and access granted to the "Current account information" product.
@@ -29,10 +29,12 @@ See `.env.example` for the full list of environment variables.
 ## Quick start
 
 ```sh
-git clone <this repo>
-cd birbank-business-listener
+git clone https://github.com/Zeynal7/birbank-balance-poller.git
+cd birbank-balance-poller
+
+# tighten default file mode for the duration of this shell so .env starts 0600
+umask 077
 cp .env.example .env
-chmod 600 .env
 # edit .env: fill BIRBANK_USERNAME, BIRBANK_PASSWORD, Telegram creds
 
 # one-shot run from the repo directory
@@ -66,6 +68,28 @@ rm "$HOME/Library/LaunchAgents/com.user.birbank-poller.plist" # uninstall
 ```
 
 Logs land in `<install dir>/poller.err` (stdlib `logging` writes to stderr).
+
+## Install on Linux (systemd)
+
+```sh
+sudo useradd -r -s /usr/sbin/nologin -d /opt/birbank-poller birbank
+sudo install -d -o birbank -g birbank -m 750 /opt/birbank-poller
+
+sudo install -o birbank -g birbank -m 750 run.sh birbank_poller.py /opt/birbank-poller/
+sudo install -o birbank -g birbank -m 600 .env                     /opt/birbank-poller/
+
+sudo cp examples/birbank-poller.service /etc/systemd/system/
+sudo cp examples/birbank-poller.timer   /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl enable --now birbank-poller.timer
+journalctl -u birbank-poller -f
+```
+
+For plain `cron` on a system without systemd, see
+[`examples/crontab.example`](examples/crontab.example). The wrapper
+(`run.sh`) `cd`s to its own directory before invoking Python, so
+`state.json` and `token.json` resolve correctly regardless of cron's `PATH`
+or `cwd`.
 
 ## Notifications
 
@@ -111,13 +135,27 @@ The poller uses `currAmt` as the source of truth, with `plannedAmt` as a
 fallback only when `currAmt` is absent. Only accounts with `status == "OPEN"`
 are tracked.
 
+## Tests
+
+```sh
+python3 -m unittest discover -s tests -v
+```
+
+stdlib `unittest` only. No fixtures, no network calls.
+
+## Reporting vulnerabilities
+
+See [SECURITY.md](SECURITY.md). Use GitHub's private advisory form rather
+than a public issue.
+
 ## Contributing
 
 PRs welcome. Keep:
 
 - stdlib-only (no `requests`, no `python-dotenv`),
 - functions/classes private by default (`_` prefix),
-- error messages free of tokens, passwords, and full response bodies.
+- error messages free of tokens, passwords, and full response bodies,
+- a test in `tests/` for any new parsing or validation logic.
 
 ## License
 
