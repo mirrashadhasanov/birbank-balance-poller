@@ -1,0 +1,27 @@
+# For Dokploy (Compose service) or plain `docker compose up -d`.
+# Set secrets in Dokploy's Environment tab, or in a local .env next to this file.
+services:
+  poller:
+    image: ${BIRBANK_IMAGE:-zeynal7/birbank-balance-poller:latest}
+    build: .
+    restart: unless-stopped
+    environment:
+      BIRBANK_BASE: ${BIRBANK_BASE:-https://my.birbank.business}
+      BIRBANK_USERNAME: ${BIRBANK_USERNAME:?set BIRBANK_USERNAME}
+      BIRBANK_PASSWORD: ${BIRBANK_PASSWORD:?set BIRBANK_PASSWORD}
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
+      TELEGRAM_CHAT_ID: ${TELEGRAM_CHAT_ID:-}
+      POLL_INTERVAL_S: ${POLL_INTERVAL_S:-300}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+    volumes:
+      - birbank-data:/data
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+
+volumes:
+  birbank-data:
