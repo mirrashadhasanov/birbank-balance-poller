@@ -91,6 +91,43 @@ For plain `cron` on a system without systemd, see
 `state.json` and `token.json` resolve correctly regardless of cron's `PATH`
 or `cwd`.
 
+## Run with Docker / Dokploy
+
+The image runs the poller in loop mode (`POLL_INTERVAL_S=300` by default) as a
+non-root user. State and the cached token live in the `/data` volume, so mount
+it to keep the baseline across restarts. Credentials come from container
+environment variables; no `.env` is baked into the image.
+
+```sh
+docker run -d --name birbank-poller --restart unless-stopped \
+  -e BIRBANK_USERNAME=0123456A \
+  -e BIRBANK_PASSWORD=... \
+  -e TELEGRAM_BOT_TOKEN=... \
+  -e TELEGRAM_CHAT_ID=... \
+  -v birbank-data:/data \
+  zeynal7/birbank-balance-poller:latest
+```
+
+Or with compose: `docker compose up -d` (reads variables from `.env`).
+
+### Dokploy
+
+1. Create a **Compose** service pointing at this repo (compose path
+   `./docker-compose.yml`), or an **Application** with provider *Docker*
+   and image `zeynal7/birbank-balance-poller:latest`.
+2. In **Environment**, set `BIRBANK_USERNAME`, `BIRBANK_PASSWORD`,
+   `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID` (optionally `POLL_INTERVAL_S`).
+3. For an Application, add a volume mount at `/data`.
+4. Deploy. No ports or domain needed — it only makes outbound requests.
+
+### Publishing the image
+
+`.github/workflows/docker.yml` builds `linux/amd64` + `linux/arm64` on every
+PR (build only) and pushes to Docker Hub on `main` (`latest`, `sha-xxxxxxx`)
+and on `v*` tags (`1.2.3`, `1.2`). Add repo secrets `DOCKERHUB_USERNAME` and
+`DOCKERHUB_TOKEN` (a Docker Hub access token). Override the image name with
+the repo variable `DOCKERHUB_IMAGE` if needed.
+
 ## Notifications
 
 Telegram is the only built-in channel. Set `TELEGRAM_BOT_TOKEN` (from
